@@ -15,15 +15,26 @@ export default function NavBar({ currentView, setCurrentView, wsStatus }) {
           <div className="flex items-center space-x-4">
             <div className="flex items-center bg-slate-100 p-1 rounded-lg mr-4">
               <button
-                onClick={() => setCurrentView('dashboard')}
+                onClick={() => setCurrentView('vote')}
                 className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  currentView === 'dashboard'
+                  currentView === 'vote'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Vote className="h-4 w-4 mr-2" />
+                Vote
+              </button>
+              <button
+                onClick={() => setCurrentView('results')}
+                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  currentView === 'results'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <Activity className="h-4 w-4 mr-2" />
-                Dashboard
+                Results
               </button>
               <button
                 onClick={() => setCurrentView('admin')}
@@ -38,7 +49,7 @@ export default function NavBar({ currentView, setCurrentView, wsStatus }) {
               </button>
             </div>
 
-            {currentView === 'dashboard' && (
+            {(currentView === 'vote' || currentView === 'results') && (
               <div
                 className={`flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
                   wsStatus === 'connected'

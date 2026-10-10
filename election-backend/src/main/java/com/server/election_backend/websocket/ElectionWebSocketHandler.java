@@ -41,16 +41,23 @@ public class ElectionWebSocketHandler extends TextWebSocketHandler {
         JsonNode payload = mapper.readTree(message.getPayload());
 
         if ("CAST_VOTE".equals(payload.get("type").asText())) {
-
-            // Extract the secure IP address we saved during the handshake
             String clientIp = (String) session.getAttributes().get("clientIp");
             String candidateId = payload.get("candidateId").asText();
 
-            // Process the vote (new or switched)
-            boolean stateChanged = votingService.processVote(clientIp, candidateId);
+            try {
+                // Try to process the vote
+                boolean stateChanged = votingService.processVote(clientIp, candidateId);
 
-            if (stateChanged) {
-                broadcastLiveUpdate(); // Send the new totals to everyone
+                if (stateChanged) {
+                    broadcastLiveUpdate();
+                }
+            } catch (SecurityException | IllegalStateException e) {
+                // CATCH BOTH EXCEPTIONS HERE!
+                // This sends the error back to React nicely instead of crashing the server thread
+                session.sendMessage(new TextMessage(mapper.writeValueAsString(Map.of(
+                        "type", "ERROR",
+                        "message", e.getMessage()
+                ))));
             }
         }
     }

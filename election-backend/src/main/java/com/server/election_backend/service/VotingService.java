@@ -89,7 +89,7 @@ public class VotingService {
     public void setElectionStatus(boolean isOpen) {
         Query query = new Query(Criteria.where("_id").is("global_settings"));
         Update update = new Update().set("isOpen", isOpen);
-        mongoTemplate.updateFirst(query, update, ElectionSettings.class);
+        mongoTemplate.upsert(query, update, ElectionSettings.class);
     }
     public Candidate addCandidate(String name, String partyColor) {
         // Generate a random ID like "cand_a1b2c3d4"
