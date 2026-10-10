@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-900: #312e81;
+}
+
+body {
+  @apply bg-slate-950 text-slate-50 font-sans antialiased;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.glass-panel {
+  @apply bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 shadow-xl;
+}
+
+.glow-effect {
+  box-shadow: 0 0 20px -5px var(--color-brand-500);
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-brand-500/30 transition-all duration-300 active:scale-95;
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-brand-500/20 cursor-pointer;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

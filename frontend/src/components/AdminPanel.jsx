@@ -3,9 +3,9 @@ import { KeyRound, Power, Download, RefreshCcw, UserPlus, Users } from 'lucide-r
 import { API_BASE_URL } from '../config';
 
 export default function AdminPanel({ addToast, candidates, hasLoaded }) {
-  const [adminSecret, setAdminSecret] = useState(() => {
-    return sessionStorage.getItem('adminSecret') || '';
-  });
+  const [adminSecret, setAdminSecret] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isElectionOpen, setIsElectionOpen] = useState(false); // Optimistic or derived state
   const [ledger, setLedger] = useState([]);
   const [isLoadingLedger, setIsLoadingLedger] = useState(false);
@@ -14,26 +14,41 @@ export default function AdminPanel({ addToast, candidates, hasLoaded }) {
   const [isAddingCandidate, setIsAddingCandidate] = useState(false);
 
   useEffect(() => {
-    sessionStorage.setItem('adminSecret', adminSecret);
-    
-    if (adminSecret) {
-      const fetchStatus = async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/admin/status`, {
-            method: 'GET',
-            headers: { 'X-Admin-Secret': adminSecret }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setIsElectionOpen(data.isOpen);
-          }
-        } catch (error) {
-          console.error('Error fetching election status:', error);
-        }
-      };
-      fetchStatus();
+    const savedSecret = sessionStorage.getItem('adminSecret');
+    if (savedSecret) {
+      setAdminSecret(savedSecret);
+      handleLogin(savedSecret, true);
     }
-  }, [adminSecret]);
+  }, []);
+
+  const handleLogin = async (secretToUse, isAutoLogin = false) => {
+    const secret = secretToUse || adminSecret;
+    if (!secret) return;
+    
+    setIsLoggingIn(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/status`, {
+        method: 'GET',
+        headers: { 'X-Admin-Secret': secret }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIsElectionOpen(data.isOpen);
+        setIsLoggedIn(true);
+        sessionStorage.setItem('adminSecret', secret);
+        if (!isAutoLogin) addToast('Successfully authenticated.', 'success');
+      } else {
+        setIsLoggedIn(false);
+        sessionStorage.removeItem('adminSecret');
+        if (!isAutoLogin) addToast('Invalid Admin Secret Key.', 'error');
+      }
+    } catch (error) {
+      console.error('Error verifying key:', error);
+      if (!isAutoLogin) addToast('Network error verifying key.', 'error');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const toggleElection = async (openStatus) => {
     if (!adminSecret) {
@@ -143,21 +158,47 @@ export default function AdminPanel({ addToast, candidates, hasLoaded }) {
           Authentication
         </h2>
         
-        <div className="max-w-md">
-          <label htmlFor="adminSecret" className="block text-sm font-medium text-slate-700 mb-2">
-            Admin Secret Key
-          </label>
-          <input
-            type="password"
-            id="adminSecret"
-            value={adminSecret}
-            onChange={(e) => setAdminSecret(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Enter secret key..."
-          />
-        </div>
+        {!isLoggedIn ? (
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="max-w-md">
+            <label htmlFor="adminSecret" className="block text-sm font-medium text-slate-700 mb-2">
+              Admin Secret Key
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="password"
+                id="adminSecret"
+                value={adminSecret}
+                onChange={(e) => setAdminSecret(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="Enter secret key..."
+              />
+              <button 
+                type="submit" 
+                disabled={isLoggingIn || !adminSecret}
+                className="py-3 px-6 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {isLoggingIn ? 'Verifying...' : 'Login'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex items-center justify-between bg-green-50 border border-green-200 p-4 rounded-xl">
+             <div className="flex items-center text-green-700 font-medium">
+                <div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div>
+                Authenticated as Administrator
+             </div>
+             <button 
+               onClick={() => { setIsLoggedIn(false); setAdminSecret(''); sessionStorage.removeItem('adminSecret'); }}
+               className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
+             >
+               Logout
+             </button>
+          </div>
+        )}
       </div>
 
+      {isLoggedIn && (
+        <>
       {/* Add Candidate Form */}
       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-2 flex items-center">
@@ -355,6 +396,9 @@ export default function AdminPanel({ addToast, candidates, hasLoaded }) {
           </table>
         </div>
       </div>
+
+        </>
+      )}
 
     </div>
   );

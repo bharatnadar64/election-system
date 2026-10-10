@@ -1,72 +1,76 @@
 import { Activity, Shield, Vote, Wifi, WifiOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function NavBar({ currentView, setCurrentView, wsStatus }) {
+  const tabs = [
+    { id: 'vote', label: 'Vote', icon: Vote },
+    { id: 'results', label: 'Live Results', icon: Activity },
+    { id: 'admin', label: 'Admin', icon: Shield }
+  ];
+
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <nav className="glass-panel sticky top-0 z-40 border-b-0 border-slate-700/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Vote className="h-8 w-8 text-blue-600 mr-2" />
-            <span className="font-bold text-xl tracking-tight text-slate-800">
-              Election<span className="text-blue-600">Sync</span>
+        <div className="flex flex-col sm:flex-row justify-between h-auto sm:h-20 py-4 sm:py-0">
+          <div className="flex items-center justify-center sm:justify-start mb-4 sm:mb-0">
+            <motion.div 
+              initial={{ rotate: -180, scale: 0 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            >
+              <Vote className="h-8 w-8 text-brand-400 mr-3" />
+            </motion.div>
+            <span className="font-bold text-2xl tracking-tight text-white glow-effect rounded-full px-2">
+              Election<span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Sync</span>
             </span>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg mr-4">
-              <button
-                onClick={() => setCurrentView('vote')}
-                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  currentView === 'vote'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Vote className="h-4 w-4 mr-2" />
-                Vote
-              </button>
-              <button
-                onClick={() => setCurrentView('results')}
-                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  currentView === 'results'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                Results
-              </button>
-              <button
-                onClick={() => setCurrentView('admin')}
-                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  currentView === 'admin'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Admin
-              </button>
+          <div className="flex items-center justify-center space-x-4">
+            <div className="flex items-center bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/50 relative">
+              {tabs.map(tab => {
+                const Icon = tab.icon;
+                const isActive = currentView === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCurrentView(tab.id)}
+                    className={`relative flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all z-10 ${
+                      isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-gradient-to-r from-brand-600 to-purple-600 rounded-xl shadow-lg glow-effect"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        style={{ zIndex: -1 }}
+                      />
+                    )}
+                    <Icon className="h-4 w-4 mr-2" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {(currentView === 'vote' || currentView === 'results') && (
               <div
-                className={`flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
+                className={`hidden md:flex items-center px-4 py-2 rounded-full text-xs font-bold border shadow-lg ${
                   wsStatus === 'connected'
-                    ? 'bg-green-50 text-green-700 border-green-200'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     : wsStatus === 'error'
-                    ? 'bg-red-50 text-red-700 border-red-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                 }`}
               >
                 {wsStatus === 'connected' ? (
-                  <Wifi className="h-3 w-3 mr-1" />
+                  <Wifi className="h-4 w-4 mr-2" />
                 ) : wsStatus === 'error' ? (
-                  <WifiOff className="h-3 w-3 mr-1" />
+                  <WifiOff className="h-4 w-4 mr-2" />
                 ) : (
-                  <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                  <Activity className="h-4 w-4 mr-2 animate-spin" />
                 )}
-                <span className="capitalize">{wsStatus}</span>
+                <span className="uppercase tracking-widest">{wsStatus}</span>
               </div>
             )}
           </div>
